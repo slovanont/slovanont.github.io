@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LojaX - AppStore para Jailbreak</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#2dd4bf; --glass: rgba(255,255,255,0.03);
+      --radius:12px; --gap:16px; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#071024);color:#e6eef6;min-height:100vh}
+    header{display:flex;gap:12px;align-items:center;padding:18px;backdrop-filter: blur(6px);}
+    .logo{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid rgba(255,255,255,0.04)}
+    .store-title{font-size:1.15rem;font-weight:700}
+    .subtitle{color:var(--muted);font-size:0.86rem}
+    .container{max-width:1100px;margin:18px auto;padding:0 18px}
+    .toolbar{display:flex;gap:12px;align-items:center;margin:12px 0}
+    .search{flex:1;display:flex;align-items:center;background:#071827;padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .search input{flex:1;background:transparent;border:0;color:inherit;padding:8px;font-size:0.98rem;outline:none}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:14px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);display:flex;gap:10px;align-items:flex-start}
+    .icon{width:64px;height:64px;border-radius:12px;flex:0 0 64px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;color:#042023;font-weight:700}
+    .meta{flex:1}
+    .app-name{font-weight:700;margin:0 0 6px 0}
+    .app-desc{margin:0;color:var(--muted);font-size:0.9rem;line-height:1.2}
+    .actions{display:flex;gap:8px;margin-top:10px}
+    .btn{padding:8px 12px;border-radius:10px;border:0;background:rgba(255,255,255,0.03);color:inherit;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#60a5fa);color:#012;box-shadow:0 6px 18px rgba(45,212,191,0.08)}
+    .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .badge{font-size:0.75rem;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.03);color:var(--muted)}
+    footer{color:var(--muted);text-align:center;padding:28px 8px}
+
+    /* modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:50;padding:20px}
+    .modal.open{display:flex}
+    .modal-card{width:100%;max-width:760px;background:linear-gradient(180deg,#061529,#07182a);padding:18px;border-radius:14px;border:1px solid rgba(255,255,255,0.04)}
+    .modal-header{display:flex;gap:12px;align-items:center}
+    .close{margin-left:auto;opacity:0.7}
+
+    @media (max-width:520px){.icon{width:52px;height:52px;border-radius:10px}.card{gap:8px}.actions{flex-direction:row-reverse}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" aria-hidden>
+      <!-- simple SVG logo -->
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+        <rect x="3" y="3" width="18" height="18" rx="5" fill="white" fill-opacity="0.06"/>
+        <path d="M7 12h10" stroke="white" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="8.5" cy="8.5" r="1.6" fill="white" fill-opacity="0.9"/>
+      </svg>
+    </div>
+    <div>
+      <div class="store-title">LojaX</div>
+      <div class="subtitle">AppStore alternativa para dispositivos com jailbreak • Suporta HTML5</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="toolbar">
+      <div class="search" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="margin-left:8px;margin-right:6px;opacity:0.8"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <input id="q" placeholder="Pesquisar apps, tweaks ou desenvolvedores" aria-label="Pesquisar apps">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="sort">Ordenar</button>
+        <button class="btn" id="refresh">Atualizar</button>
+      </div>
+    </div>
+
+    <section class="grid" id="apps">
+      <!-- cards gerados pelo JS -->
+    </section>
+
+    <div id="empty" style="display:none;color:var(--muted);text-align:center;padding:28px">Nenhum app encontrado.</div>
+
+    <footer>Feito com ❤️ — teste localmente ou hospede como um arquivo estático. Os links de download aqui são apenas placeholders.</footer>
+  </main>
+
+  <!-- modal de detalhe -->
+  <div id="modal" class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-card" role="document">
+      <div class="modal-header">
+        <div id="modal-icon" style="width:72px;height:72px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;background:linear-gradient(90deg,var(--accent),#60a5fa)"></div>
+        <div>
+          <h3 id="modal-title" style="margin:0;font-size:1.15rem"></h3>
+          <div id="modal-sub" style="color:var(--muted);font-size:0.9rem;margin-top:6px"></div>
+        </div>
+        <button class="btn close" id="close">Fechar</button>
+      </div>
+      <div id="modal-desc" style="margin-top:12px;color:var(--muted);line-height:1.4"></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <a id="modal-download" class="btn primary" href="#">Baixar</a>
+        <button class="btn" id="modal-open">Abrir página</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dados de exemplo - substitua por dados reais / JSON do servidor
+    const APPS = [
+      {id:1,name:'Filtrix',desc:'Bloqueador de anúncios e otimização de DNS para iOS. Compatível com iOS 12-14.',iconBg:'#ffd166',tags:['Tweaks','Utilitário']},
+      {id:2,name:'AquaPlayer',desc:'Reprodutor de mídia com suporte a legendas e temas personalizáveis.',iconBg:'#60a5fa',tags:['Media','Player']},
+      {id:3,name:'QuickPrefs',desc:'Atalhos rápidos na barra de status — configure gestos para ações.',iconBg:'#7dd3fc',tags:['Tweaks','Produtividade']},
+      {id:4,name:'NetScope',desc:'Ferramenta de análise de rede com monitoramento em tempo real.',iconBg:'#a78bfa',tags:['Desenvolvedor','Rede']},
+      {id:5,name:'ThemeBox',desc:'Coleção de temas e ícones para personalizar seu SpringBoard.',iconBg:'#f472b6',tags:['Personalização']},
+      {id:6,name:'BatteryPro',desc:'Monitore ciclos, temperatura e saúde da bateria com widgets.',iconBg:'#34d399',tags:['Utilitário','Sistema']}
+    ];
+
+    const appsEl = document.getElementById('apps');
+    const q = document.getElementById('q');
+    const empty = document.getElementById('empty');
+
+    function render(list){
+      appsEl.innerHTML='';
+      if(!list.length){ empty.style.display='block'; return } else empty.style.display='none';
+      for(const app of list){
+        const card = document.createElement('article'); card.className='card'; card.setAttribute('tabindex','0');
+        card.innerHTML = `
+          <div class="icon" style="background:${app.iconBg}">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <rect x="3" y="3" width="18" height="18" rx="5" fill="rgba(255,255,255,0.14)"/>
+              <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="9" font-weight="700" fill="#021014">${app.name.slice(0,2).toUpperCase()}</text>
+            </svg>
+          </div>
+          <div class="meta">
+            <h4 class="app-name">${app.name}</h4>
+            <p class="app-desc">${app.desc}</p>
+            <div class="badges">${(app.tags||[]).map(t=>`<span class="badge">${t}</span>`).join('')}</div>
+            <div class="actions">
+              <button class="btn primary" data-id="${app.id}">Baixar</button>
+              <button class="btn" data-id="${app.id}" data-action="detail">Detalhes</button>
+            </div>
+          </div>`;
+        appsEl.appendChild(card);
+      }
+    }
+
+    // inicial
+    render(APPS);
+
+    // pesquisar
+    q.addEventListener('input',()=>{
+      const term = q.value.trim().toLowerCase();
+      const filtered = APPS.filter(a=> a.name.toLowerCase().includes(term) || a.desc.toLowerCase().includes(term) || (a.tags||[]).join(' ').toLowerCase().includes(term));
+      render(filtered);
+    });
+
+    // delegação para botões
+    document.addEventListener('click',e=>{
+      const download = e.target.closest('button[data-id]');
+      if(download && download.classList.contains('primary')){
+        const id = download.dataset.id; alert('Iniciando download do app id:'+id+' (placeholder)');
+        return;
+      }
+      const detail = e.target.closest('button[data-action="detail"]');
+      if(detail){
+        const id = detail.dataset.id; openModal(id); return;
+      }
+    });
+
+    // modal
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalIcon = document.getElementById('modal-icon');
+    const modalDownload = document.getElementById('modal-download');
+    document.getElementById('close').addEventListener('click',()=> closeModal());
+    modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+
+    function openModal(id){
+      const app = APPS.find(a=>a.id==id); if(!app) return;
+      modalTitle.textContent = app.name;
+      modalDesc.textContent = app.desc + ' — Versão: 1.0.0 • Desenvolvedor: DevX';
+      modalIcon.style.background = app.iconBg; modalIcon.textContent = app.name.slice(0,2).toUpperCase();
+      modalDownload.href = '#download-'+app.id; // placeholder
+      modal.classList.add('open'); modal.setAttribute('aria-hidden','false');
+    }
+    function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+
+    // botões auxiliares
+    document.getElementById('refresh').addEventListener('click',()=>{ alert('Atualização simulada — implemente fetch() para carregar dados reais.'); });
+    document.getElementById('sort').addEventListener('click',()=>{
+      APPS.sort((a,b)=>a.name.localeCompare(b.name)); render(APPS);
+    });
+
+    // acessibilidade: abrir com Enter
+    appsEl.addEventListener('keydown',e=>{ if(e.key==='Enter'){ const btn = e.target.querySelector('button[data-action="detail"]'); if(btn) btn.click(); }});
+  </script>
+</body>
+</html>
